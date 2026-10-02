@@ -1,17 +1,150 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>
-      Tab 1
-    </ion-title>
-  </ion-toolbar>
-</ion-header>
+<ion-content class="login-content">
+  <div class="brand">
+    <a href="https://www.jamiecoulter.co.uk" target="_blank">
+      <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/217233/logo.png" alt="Logo" />
+    </a>
+  </div>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Tab 1</ion-title>
-    </ion-toolbar>
-  </ion-header>
+  <div class="login" [ngClass]="{'test': isTest, 'testtwo': isTestTwo, 'register-mode': isRegisterMode}">
+    
+    <!-- MODO LOGIN -->
+    <ng-container *ngIf="!isAuthenticated && !isRegisterMode">
+      <div class="login_title">
+        <span>Login to your account</span>
+      </div>
 
-  <app-explore-container name="Tab 1 page"></app-explore-container>
+      <div class="login_fields">
+        <div class="login_fields__user">
+          <div class="icon" [style.opacity]="isUserFocused ? '1' : '0.5'">
+            <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/217233/user_icon_copy.png" alt="User" />
+          </div>
+          <input 
+            type="text" 
+            placeholder="Username" 
+            [(ngModel)]="username"
+            (focus)="isUserFocused = true"
+            (blur)="isUserFocused = false" 
+          />
+          <div class="validation" [style.opacity]="username.length > 0 ? '1' : '0'" [style.right]="username.length > 0 ? '30px' : '20px'">
+            <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/217233/tick.png" alt="Validation" />
+          </div>
+        </div>
+
+        <div class="login_fields__password">
+          <div class="icon" [style.opacity]="isPasswordFocused ? '1' : '0.5'">
+            <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/217233/lock_icon_copy.png" alt="Lock" />
+          </div>
+          <input 
+            type="password" 
+            placeholder="Password" 
+            [(ngModel)]="password"
+            (focus)="isPasswordFocused = true"
+            (blur)="isPasswordFocused = false" 
+          />
+          <div class="validation" [style.opacity]="password.length > 0 ? '1' : '0'" [style.right]="password.length > 0 ? '30px' : '20px'">
+            <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/217233/tick.png" alt="Validation" />
+          </div>
+        </div>
+
+        <div class="login_fields__submit">
+          <input type="submit" value="Log In" (click)="onLogin()" />
+          <div class="forgot">
+            <a href="javascript:void(0)" (click)="toggleMode()">Create Account?</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="disclaimer">
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce semper laoreet placerat.</p>
+      </div>
+    </ng-container>
+
+    <!-- MODO REGISTRO -->
+    <ng-container *ngIf="!isAuthenticated && isRegisterMode">
+      <div class="login_title">
+        <span>Create new account</span>
+      </div>
+
+      <div class="login_fields">
+        <div class="login_fields__user">
+          <div class="icon" [style.opacity]="isUserFocused ? '1' : '0.5'">
+            <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/217233/user_icon_copy.png" alt="User" />
+          </div>
+          <input 
+            type="text" 
+            placeholder="Username" 
+            [(ngModel)]="regUsername"
+            (focus)="isUserFocused = true"
+            (blur)="isUserFocused = false" 
+          />
+        </div>
+
+        <div class="login_fields__user">
+          <div class="icon" [style.opacity]="isNameFocused ? '1' : '0.5'">
+            <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/217233/user_icon_copy.png" alt="Name" />
+          </div>
+          <input 
+            type="text" 
+            placeholder="Full Name" 
+            [(ngModel)]="regName"
+            (focus)="isNameFocused = true"
+            (blur)="isNameFocused = false" 
+          />
+        </div>
+
+        <div class="login_fields__user">
+          <div class="icon" [style.opacity]="isEmailFocused ? '1' : '0.5'">
+            <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/217233/user_icon_copy.png" alt="Email" />
+          </div>
+          <input 
+            type="email" 
+            placeholder="Email Address" 
+            [(ngModel)]="regEmail"
+            (focus)="isEmailFocused = true"
+            (blur)="isEmailFocused = false" 
+          />
+        </div>
+
+        <div class="login_fields__password">
+          <div class="icon" [style.opacity]="isPasswordFocused ? '1' : '0.5'">
+            <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/217233/lock_icon_copy.png" alt="Lock" />
+          </div>
+          <input 
+            type="password" 
+            placeholder="Password" 
+            [(ngModel)]="regPassword"
+            (focus)="isPasswordFocused = true"
+            (blur)="isPasswordFocused = false" 
+          />
+        </div>
+
+        <div class="login_fields__submit reg_submit">
+          <input type="submit" value="Register" (click)="onRegister()" />
+          <div class="forgot">
+            <a href="javascript:void(0)" (click)="toggleMode()">Back to Login</a>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- PANTALLA DE ÉXITO -->
+    <div class="success" *ngIf="isAuthenticated">
+      <h2>Authentication Success</h2>
+      <p>Welcome back</p>
+    </div>
+
+  </div>
+
+  <!-- RECUADRO DE CARGA -->
+  <div class="authent" 
+       [style.display]="isAuthentShowing ? 'block' : 'none'" 
+       [style.right.px]="authentRight" 
+       [style.opacity]="authentOpacity">
+    <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/217233/puff.svg" alt="Authenticating" />
+    <p>{{ isRegisterMode ? 'Creating account...' : 'Authenticating...' }}</p>
+  </div>
+
+  <div class="love">
+    <p>Made with <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/217233/love_copy.png" alt="Love" /> by <a href="https://www.jamiecoulter.co.uk" target="_blank">Jcoulterdesign</a>.</p>
+  </div>
 </ion-content>

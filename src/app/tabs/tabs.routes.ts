@@ -20,14 +20,14 @@ export const routes: Routes = [
       },
       {
         path: '',
-        redirectTo: '/tabs/tab1',
+        redirectTo: '/tabs/tab1', // Abre Tab1 por defecto
         pathMatch: 'full',
       },
     ],
   },
   {
     path: '',
-    redirectTo: '/tabs/tab1',
+    redirectTo: '/tabs/tab1', // Abre Tab1 por defecto al entrar a la raíz
     pathMatch: 'full',
   },
 ];

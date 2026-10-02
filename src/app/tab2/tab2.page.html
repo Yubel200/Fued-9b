@@ -1,31 +1,117 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title> Photo Gallery </ion-title>
-  </ion-toolbar>
-</ion-header>
+<ion-content>
+  <header class="header">
+    <h1>🍿 Tienda de Dulces & Snacks 🍭</h1>
+    <p>Selecciona tus dulces favoritos y haz tu pedido</p>
+  </header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Photo Gallery</ion-title>
-    </ion-toolbar>
-  </ion-header>
+  <main class="container">
+    <div class="grid-productos">
+      <div class="card" *ngFor="let p of products">
+        <div class="card-img">
+          <img [src]="p.img" [alt]="p.name" (error)="onImageError($event)">
+        </div>
+        <div class="card-body">
+          <h3>{{ p.name }}</h3>
+          <div class="stock-info" [style.color]="(!p.available || p.stock <= 0) ? '#e74c3c' : '#16a34a'">
+            {{ (!p.available || p.stock <= 0) ? '❌ Agotado' : 'Disponible: ' + p.stock }}
+          </div>
+          <span class="price">${{ p.price | number:'1.2-2' }}</span>
+          <button class="btn-add" (click)="addToCart(p)" [disabled]="!p.available || p.stock <= 0">
+            {{ (!p.available || p.stock <= 0) ? 'Agotado' : 'Añadir al Carrito 🛒' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
 
-  <ion-grid>
-    <ion-row>
-      @for (photo of photoService.photos(); track photo.filepath; let position = $index) {
-      <ion-col size="6">
-        <button (click)="showActionSheet(photo, position)">
-          <img [src]="photo.webviewPath" [attr.alt]="'Photo ' + (position + 1)" loading="lazy" />
-        </button>
-      </ion-col>
-      }
-    </ion-row>
-  </ion-grid>
+  <footer class="footer-admin">
+    <button class="btn-toggle-admin" (click)="toggleAdminPanel()">
+      {{ isAdminUnlocked ? '🔒 Cerrar Sesión Admin' : '🔒 Acceso Administrador' }}
+    </button>
+  </footer>
 
-  <ion-fab vertical="bottom" horizontal="center" slot="fixed">
-    <ion-fab-button (click)="addPhotoToGallery()">
-      <ion-icon name="camera"></ion-icon>
-    </ion-fab-button>
-  </ion-fab>
+  <!-- Panel Admin -->
+  <section class="admin-panel" [class.active]="isAdminUnlocked">
+    <div class="admin-panel-header">
+      <h2>⚙️ Panel de Control de Inventario</h2>
+    </div>
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th>Cantidad Disponible</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let p of products">
+          <td><strong>{{ p.name }}</strong></td>
+          <td>
+            <input type="number" class="admin-input-stock" [value]="p.stock" min="0" (change)="updateStock(p, $event)">
+          </td>
+          <td>
+            <select class="admin-select-status" [value]="p.available" (change)="updateAvailability(p, $event)">
+              <option [value]="true">Disponible</option>
+              <option [value]="false">Agotado</option>
+            </select>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Botón Flotante del Carrito -->
+  <button class="cart-float-btn" (click)="openCart()">
+    🛒 Ver Carrito <span class="cart-badge">{{ totalCartCount }}</span>
+  </button>
+
+  <!-- Modal del Carrito -->
+  <div class="modal-overlay" [class.active]="isCartOpen">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>🛍️ Mi Pedido</h2>
+        <button class="close-btn" (click)="closeCart()">&times;</button>
+      </div>
+
+      <div class="cart-items-list">
+        <p class="empty-cart-msg" *ngIf="cart.length === 0">Tu carrito está vacío.</p>
+        <div class="cart-item" *ngFor="let item of cart">
+          <div class="cart-item-info">
+            <div class="cart-item-title">{{ item.name }}</div>
+            <div class="cart-item-price">${{ item.price | number:'1.2-2' }} c/u</div>
+          </div>
+          <div class="cart-controls">
+            <button class="btn-qty" (click)="updateQuantity(item.id, -1)">-</button>
+            <span>{{ item.quantity }}</span>
+            <button class="btn-qty" (click)="updateQuantity(item.id, 1)">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cart-total">
+        <span>Total:</span>
+        <span>${{ totalCartAmount | number:'1.2-2' }}</span>
+      </div>
+
+      <button class="btn-send-whatsapp" (click)="sendOrderWhatsApp()">
+        📱 Pedir por WhatsApp al 6389-8335
+      </button>
+
+      <div class="modal-payment">
+        <h3>💳 Métodos de Pago</h3>
+        <div class="payment-methods-modal">
+          <div class="pm-card">
+            <h4>💵 Efectivo</h4>
+            <p>Pagas al recibir tu pedido.</p>
+          </div>
+          <div class="pm-card yappy">
+            <h4>📲 Yappy</h4>
+            <p>Enviar al número:</p>
+            <p class="pm-yappy-num">6569-0192</p>
+            <p class="pm-note">Enviar comprobante al WhatsApp</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </ion-content>
