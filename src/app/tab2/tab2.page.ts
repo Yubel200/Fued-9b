@@ -18,6 +18,7 @@ import { addIcons } from 'ionicons';
 import { camera, trash, close, cart, lockClosed } from 'ionicons/icons';
 import type { UserPhoto } from '../services/photo.service';
 import { PhotoService } from '../services/photo.service';
+import { ApiConfigService } from '../services/api-config.service';
 
 interface Producto {
   id: number;
@@ -60,6 +61,7 @@ export class Tab2Page implements OnInit {
   private actionSheetController = inject(ActionSheetController);
   private http = inject(HttpClient);
   private cdr = inject(ChangeDetectorRef);
+  private apiConfig = inject(ApiConfigService);
 
   // Propiedades de la Tienda de Dulces
   products: Producto[] = [];
@@ -67,7 +69,7 @@ export class Tab2Page implements OnInit {
   isCartOpen: boolean = false;
   isAdminUnlocked: boolean = false;
   readonly ADMIN_PASSWORD = "1234";
-  private apiUrl = 'http://localhost/php-api/productos.php';
+  private get apiUrl() { return this.apiConfig.endpoint('productos.php'); }
 
   constructor() {
     addIcons({ camera, trash, close, cart, lockClosed });
@@ -90,7 +92,7 @@ export class Tab2Page implements OnInit {
         // Mapeamos para asegurar que 'available' sea un booleano real y no un valor numérico/cadena
         this.products = data.map(p => ({
           ...p,
-          available: Boolean(Number(p.available)) || p.stock > 0
+          available: Boolean(Number(p.available)) && p.stock > 0
         }));
 
         // Forzamos la detección de cambios visual en Angular

@@ -5,6 +5,7 @@ import { IonHeader, IonToolbar, IonTitle, IonContent, AlertController } from '@i
 import { ExploreContainerComponent } from '../explore-container/explore-container.component';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { ApiConfigService } from '../services/api-config.service';
 
 @Component({
   selector: 'app-tab1',
@@ -29,6 +30,8 @@ export class Tab1Page {
   // Campos Login
   username = '';
   password = '';
+  serverIp = '';
+  private apiConfig = inject(ApiConfigService);
 
   // Campos Registro
   regUsername = '';
@@ -55,48 +58,71 @@ export class Tab1Page {
   authentRight = 90;
   authentOpacity = 0;
 
-  private loginUrl = 'http://localhost/php-api/login.php';
-  private registerUrl = 'http://localhost/php-api/register.php';
+  private get loginUrl() { return this.apiConfig.endpoint('login.php'); }
+  private get registerUrl() { return this.apiConfig.endpoint('register.php'); }
 
-  constructor() {}
+  constructor() { this.serverIp = this.apiConfig.serverIp; }
+
+  saveServerIp(): boolean {
+    const saved = this.apiConfig.setServerIp(this.serverIp);
+    if (!saved) this.showAlert('IP no válida', 'Escribe una IPv4 válida, por ejemplo 192.168.101.19.');
+    else this.showAlert('Conexión configurada', `Las APIs se consultarán en http://${this.serverIp}/php-api.`);
+    return saved;
+  }
 
   toggleMode() {
     this.isRegisterMode = !this.isRegisterMode;
   }
 
-  onLogin() {
-    if (!this.username.trim() || !this.password.trim()) {
-      this.showAlert('Campos requeridos', 'Por favor ingresa usuario y contraseña.');
-      return;
-    }
-
-    this.startAnimation();
-
-    const credentials = { username: this.username.trim(), password: this.password };
-
-    this.http.post<any>(this.loginUrl, credentials).subscribe({
-      next: (res) => {
-        this.resetAnimation();
-        if (res.success) {
-          this.isAuthenticated = true;
-          this.router.navigate(['/tabs/tab2']);
-        }
-      },
-      error: (err) => {
-        this.resetAnimation();
-        const res = err.error;
-        if (err.status === 401) {
-          this.showAlert('Error de acceso', 'Contraseña incorrecta.');
-        } else if (err.status === 404) {
-          this.showAlert('Error de acceso', 'El usuario no existe.');
-        } else {
-          this.showAlert('Error', res?.message || 'No se pudo conectar con el servidor.');
-        }
-      }
-    });
+  
+onLogin() {
+  if (!this.apiConfig.setServerIp(this.serverIp)) {
+    this.showAlert('IP no válida', 'Escribe una IPv4 válida.');
+    return;
   }
 
+  if (!this.username.trim() || !this.password) {
+    this.showAlert('Campos requeridos', 'Ingresa usuario y contraseña.');
+    return;
+  }
+
+  this.startAnimation();
+
+  const credentials = {
+    username: this.username.trim(),
+    password: this.password
+  };
+
+  this.http.post<any>(this.loginUrl, credentials).subscribe({
+    next: res => {
+      this.resetAnimation();
+
+      if (res?.success && res.token && res.user) {
+        localStorage.setItem('tienda_token', res.token);
+        localStorage.setItem('tienda_user', JSON.stringify(res.user));
+
+        this.isAuthenticated = true;
+        this.router.navigate(['/tabs/tab2']);
+      } else {
+        this.showAlert('Error de acceso', res?.message || 'No se pudo iniciar sesión.');
+      }
+    },
+    error: err => {
+      this.resetAnimation();
+      this.showAlert(
+        'Error de acceso',
+        err.error?.message || 'No se pudo conectar con el servidor.'
+      );
+    }
+  });
+}
+
+
   onRegister() {
+    if (!this.apiConfig.setServerIp(this.serverIp)) {
+      this.showAlert('IP no válida', 'Escribe una IPv4 válida, por ejemplo 192.168.101.19.');
+      return;
+    }
     if (!this.regUsername.trim() || !this.regPassword.trim()) {
       this.showAlert('Campos requeridos', 'Usuario y contraseña son obligatorios.');
       return;
@@ -133,24 +159,55 @@ export class Tab1Page {
     });
   }
 
-  private loginAfterRegister() {
-    const credentials = { username: this.username.trim(), password: this.password };
+  
+private loginAfterRegister() {
+  const credentials = {
+    username: this.username.trim(),
+    password: this.password
+  };
 
-    this.http.post<any>(this.loginUrl, credentials).subscribe({
-      next: (res) => {
-        this.resetAnimation();
-        if (res.success) {
-          this.isAuthenticated = true;
-          this.router.navigate(['/tabs/tab2']);
-        }
-      },
-      error: () => {
-        this.resetAnimation();
-        this.showAlert('Registro exitoso', 'Usuario creado. Por favor inicia sesión manualmente.');
+  this.http.post<any>(this.loginUrl, credentials).subscribe({
+    next: res => {
+      this.resetAnimation();
+
+      if (res?.success && res?.token && res?.user) {
+
+        // Guardar el token de autenticación
+        localStorage.setItem('tienda_token', res.token);
+
+        // Guardar los datos del usuario
+        localStorage.setItem('tienda_user', JSON.stringify(res.user));
+
+        // Indicar que el usuario inició sesión
+        this.isAuthenticated = true;
+
+        // Entrar a la tienda
+        this.router.navigate(['/tabs/tab2']);
+
+      } else {
+        this.showAlert(
+          'Registro exitoso',
+          'Tu cuenta fue creada. Inicia sesión manualmente.'
+        );
+
         this.isRegisterMode = false;
       }
-    });
-  }
+    },
+
+    error: err => {
+      this.resetAnimation();
+
+      this.showAlert(
+        'Registro exitoso',
+        err.error?.message ||
+        'Tu cuenta fue creada, pero debes iniciar sesión manualmente.'
+      );
+
+      this.isRegisterMode = false;
+    }
+  });
+}
+
 
   private startAnimation() {
     this.isTest = true;

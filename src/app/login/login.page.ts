@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { ApiConfigService } from '../services/api-config.service';
 import { 
   IonContent, 
   IonHeader, 
@@ -36,15 +37,30 @@ import {
 export class LoginPage {
   username = '';
   password = '';
+  serverIp = '';
+  private apiConfig = inject(ApiConfigService);
 
   private http = inject(HttpClient);
   private router = inject(Router);
   private alertController = inject(AlertController);
 
-  private loginUrl = 'http://localhost/php-api/login.php';
-  private registerUrl = 'http://localhost/php-api/register.php';
+  private get loginUrl() { return this.apiConfig.endpoint('login.php'); }
+  private get registerUrl() { return this.apiConfig.endpoint('register.php'); }
+
+  constructor() { this.serverIp = this.apiConfig.serverIp; }
+
+  saveServerIp(): boolean {
+    const saved = this.apiConfig.setServerIp(this.serverIp);
+    if (!saved) this.showAlert('IP no válida', 'Escribe una IPv4 válida, por ejemplo 192.168.101.19.');
+    else this.showAlert('Conexión configurada', `Las APIs se consultarán en http://${this.serverIp}/php-api (Apache, puerto 80).`);
+    return saved;
+  }
 
   async onLogin() {
+    if (!this.apiConfig.setServerIp(this.serverIp)) {
+      this.showAlert('IP no válida', 'Escribe una IPv4 válida, por ejemplo 192.168.101.19.');
+      return;
+    }
     if (!this.username.trim() || !this.password.trim()) {
       this.showAlert('Campos requeridos', 'Por favor ingresa usuario y contraseña.');
       return;
@@ -57,11 +73,17 @@ export class LoginPage {
 
     this.http.post<any>(this.loginUrl, payload).subscribe({
       next: (res) => {
-        if (res.success) {
-          // Solo redirige si PHP responde success: true
-          this.router.navigate(['/tabs/tab2']);
-        }
-      },
+  console.log('Respuesta de login.php:', res);
+
+  if (res.success === true) {
+    this.router.navigate(['/tabs/tab2']);
+  } else {
+    this.showAlert(
+      'Inicio de sesión',
+      res.message || 'El servidor respondió, pero no confirmó el acceso.'
+    );
+  }
+},
       error: (err) => {
         const res = err.error;
 

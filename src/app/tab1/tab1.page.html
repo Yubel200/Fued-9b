@@ -15,6 +15,17 @@
 
       <div class="login_fields">
         <div class="login_fields__user">
+          <input type="text" inputmode="decimal" placeholder="IP del servidor Apache (ej. 192.168.101.19)" [(ngModel)]="serverIp" />
+        </div>
+        <div class="api-save">
+  <input
+    type="button"
+    value="Guardar conexión API"
+    (click)="saveServerIp()"
+  />
+</div>
+        <p class="disclaimer">API: http://{{ serverIp }}/php-api · Apache puerto 80</p>
+        <div class="login_fields__user">
           <div class="icon" [style.opacity]="isUserFocused ? '1' : '0.5'">
             <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/217233/user_icon_copy.png" alt="User" />
           </div>

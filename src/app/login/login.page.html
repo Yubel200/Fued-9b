@@ -9,6 +9,13 @@
     <h2>Bienvenido</h2>
     <p>Ingresa tus datos para continuar</p>
 
+    <ion-item class="ion-margin-top">
+      <ion-label position="floating">IP del servidor Apache (red local)</ion-label>
+      <ion-input type="text" inputmode="decimal" placeholder="192.168.1.135" [(ngModel)]="serverIp"></ion-input>
+    </ion-item>
+    <ion-button expand="block" fill="outline" (click)="saveServerIp()">Guardar conexión API</ion-button>
+    <p class="ion-padding-top">API: http://{{ serverIp }}/php-api · Apache puerto 80</p>
+
     <ion-item>
       <ion-label position="floating">Usuario</ion-label>
       <ion-input type="text" [(ngModel)]="username"></ion-input>
